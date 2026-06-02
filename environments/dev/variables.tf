@@ -26,3 +26,8 @@ variable "private_subnet_cidrs" {
 variable "availability_zones" {
   type = list(string)
 }
+
+variable "nat_gateway_count" {
+  description = "Number of NAT Gateways for this environment"
+  type        = number
+}
