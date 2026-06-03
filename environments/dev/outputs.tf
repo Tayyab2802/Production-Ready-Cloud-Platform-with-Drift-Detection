@@ -66,3 +66,16 @@ output "cloudfront_domain_name" {
 output "cloudfront_waf_arn" {
   value = module.waf.web_acl_arn
 }
+
+
+output "rds_endpoint" {
+  value = module.rds.db_endpoint
+}
+
+output "rds_port" {
+  value = module.rds.db_port
+}
+
+output "rds_database_name" {
+  value = module.rds.db_name
+}

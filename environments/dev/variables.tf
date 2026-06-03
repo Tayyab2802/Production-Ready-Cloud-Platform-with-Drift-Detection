@@ -51,3 +51,14 @@ variable "asg_max_size" {
 variable "ami_id" {
   type = string
 }
+
+variable "db_username" {
+  description = "PostgreSQL database username"
+  type        = string
+}
+
+variable "db_password" {
+  description = "PostgreSQL database password"
+  type        = string
+  sensitive   = true
+}

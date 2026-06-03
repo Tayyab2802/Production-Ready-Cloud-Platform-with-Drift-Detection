@@ -40,6 +40,12 @@ module "compute" {
   asg_max_size      = var.asg_max_size
   ami_id            = var.ami_id
 
+  db_host     = module.rds.db_endpoint
+  db_port     = module.rds.db_port
+  db_name     = module.rds.db_name
+  db_username = var.db_username
+  db_password = var.db_password
+
 }
 
 module "alb" {
@@ -52,6 +58,19 @@ module "alb" {
   alb_security_group_id  = module.security.alb_security_group_id
   autoscaling_group_name = module.compute.autoscaling_group_name
   app_port               = 8000
+}
+
+module "rds" {
+  source = "../../modules/rds"
+
+  project_name          = var.project_name
+  environment           = var.environment
+  private_subnet_ids    = module.networking.private_subnet_ids
+  rds_security_group_id = module.security.rds_security_group_id
+
+  db_name     = "bankingapp"
+  db_username = var.db_username
+  db_password = var.db_password
 }
 
 module "waf" {
