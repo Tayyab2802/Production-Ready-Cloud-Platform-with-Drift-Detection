@@ -46,7 +46,7 @@ module "compute" {
   db_username = var.db_username
   db_password = var.db_password
 
-  container_image = var.container_image
+
 
 }
 
