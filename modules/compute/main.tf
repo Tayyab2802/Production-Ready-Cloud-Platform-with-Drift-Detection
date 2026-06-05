@@ -99,3 +99,21 @@ resource "aws_autoscaling_group" "app" {
     propagate_at_launch = true
   }
 }
+
+resource "aws_iam_role_policy" "ssm_parameter_read" {
+  name = "${var.project_name}-${var.environment}-ssm-parameter-read"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Resource = "arn:aws:ssm:eu-west-2:536376965240:parameter/production-cloud-platform/dev/container-image"
+      }
+    ]
+  })
+}

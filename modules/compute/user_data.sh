@@ -8,7 +8,13 @@ systemctl start docker
 
 aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 536376965240.dkr.ecr.eu-west-2.amazonaws.com
 
-docker pull 536376965240.dkr.ecr.eu-west-2.amazonaws.com/production-cloud-platform-dev-app:dev-v3
+CONTAINER_IMAGE=$(aws ssm get-parameter \
+  --name "/production-cloud-platform/dev/container-image" \
+  --query "Parameter.Value" \
+  --output text \
+  --region eu-west-2)
+
+docker pull "$CONTAINER_IMAGE"
 
 docker rm -f banking-demo-api || true
 
@@ -21,5 +27,5 @@ docker run -d \
   -e DB_NAME="${db_name}" \
   -e DB_USERNAME="${db_username}" \
   -e DB_PASSWORD="${db_password}" \
-  536376965240.dkr.ecr.eu-west-2.amazonaws.com/production-cloud-platform-dev-app:dev-v3
+  "$CONTAINER_IMAGE"
   

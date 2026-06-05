@@ -1,0 +1,85 @@
+name: App CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "app/**"
+      - ".github/workflows/app-cicd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ROLE_TO_ASSUME: arn:aws:iam::536376965240:role/production-cloud-platform-dev-github-actions-role
+  ECR_REPOSITORY: production-cloud-platform-dev-app
+  IMAGE_PARAMETER_NAME: /production-cloud-platform/dev/container-image
+  ASG_NAME: production-cloud-platform-dev-app-asg
+  ALB_URL: http://pcp-dev-alb-1394359621.eu-west-2.elb.amazonaws.com
+
+jobs:
+  app-deploy:
+    name: Build, Scan and Deploy App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image URI
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_URI="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:dev-${{ github.run_number }}-${SHORT_SHA}"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          echo "Image URI: $IMAGE_URI"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "$IMAGE_URI" ./app
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_URI }}
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push "$IMAGE_URI"
+
+      - name: Update deployed image in SSM
+        run: |
+          aws ssm put-parameter \
+            --name "${{ env.IMAGE_PARAMETER_NAME }}" \
+            --type "String" \
+            --value "$IMAGE_URI" \
+            --overwrite
+
+      - name: Start ASG instance refresh
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "${{ env.ASG_NAME }}" \
+            --preferences '{"MinHealthyPercentage":50,"InstanceWarmup":120}'
+
+      - name: Wait for deployment
+        run: sleep 240
+
+      - name: Smoke test application
+        run: |
+          curl --fail "${{ env.ALB_URL }}/health"
