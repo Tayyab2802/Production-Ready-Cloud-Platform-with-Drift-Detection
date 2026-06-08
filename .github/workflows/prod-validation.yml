@@ -1,0 +1,64 @@
+name: Prod Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "environments/prod/**"
+      - "modules/**"
+      - "app/backend/**"
+      - "app/frontend/**"
+      - ".github/workflows/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  TF_WORKING_DIR: environments/prod
+  ROLE_TO_ASSUME: arn:aws:iam::536376965240:role/production-cloud-platform-prod-github-actions-role
+
+jobs:
+  validate-prod:
+    name: Validate Production Changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan (Production)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform plan \
+            -lock-timeout=5m \
+            -var="db_password=${{ secrets.PROD_DB_PASSWORD }}"
+
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          quiet: true
+          soft_fail: true
