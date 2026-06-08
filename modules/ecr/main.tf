@@ -14,5 +14,6 @@ resource "aws_ecr_repository" "app" {
     Name        = "${var.project_name}-${var.environment}-app"
     Project     = var.project_name
     Environment = var.environment
+    ManagedBy   = "Terraform"
   }
 }
