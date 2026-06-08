@@ -26,6 +26,12 @@ resource "aws_db_instance" "this" {
   multi_az                = var.multi_az
   backup_retention_period = 7
 
+  lifecycle {
+    ignore_changes = [
+      password
+    ]
+  }
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-postgres"
     Project     = var.project_name
