@@ -64,6 +64,12 @@ resource "aws_launch_template" "app" {
       Environment = var.environment
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      user_data
+    ]
+  }
 }
 
 resource "aws_autoscaling_group" "app" {
@@ -112,7 +118,7 @@ resource "aws_iam_role_policy" "ssm_parameter_read" {
         Action = [
           "ssm:GetParameter"
         ]
-        Resource = "arn:aws:ssm:eu-west-2:536376965240:parameter/production-cloud-platform/dev/container-image"
+        Resource = "arn:aws:ssm:eu-west-2:536376965240:parameter/${var.project_name}/${var.environment}/container-image"
       }
     ]
   })
