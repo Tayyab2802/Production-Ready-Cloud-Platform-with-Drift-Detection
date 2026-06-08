@@ -17,7 +17,7 @@ jobs:
   detect-prod-drift:
     name: Detect Production Drift
     runs-on: ubuntu-latest
-    environment: production
+    
 
     defaults:
       run:
