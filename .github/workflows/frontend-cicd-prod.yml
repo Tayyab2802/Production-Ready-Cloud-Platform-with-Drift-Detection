@@ -16,7 +16,7 @@ env:
   AWS_REGION: eu-west-2
   ROLE_TO_ASSUME: arn:aws:iam::536376965240:role/production-cloud-platform-prod-github-actions-role
   FRONTEND_BUCKET: production-cloud-platform-prod-frontend
-  CLOUDFRONT_DISTRIBUTION_ID: E2TAE7GIIXXWTL
+  CLOUDFRONT_DISTRIBUTION_ID: E396I4589XOP83
 
 jobs:
   frontend-deploy-prod:
