@@ -1,0 +1,59 @@
+name: Prod Drift Detection
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ROLE_TO_ASSUME: arn:aws:iam::536376965240:role/production-cloud-platform-prod-github-actions-role
+
+jobs:
+  detect-prod-drift:
+    name: Detect Production Drift
+    runs-on: ubuntu-latest
+    environment: production
+
+    defaults:
+      run:
+        working-directory: environments/prod
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform drift detection plan
+        id: drift
+        continue-on-error: true
+        run: |
+          terraform plan -detailed-exitcode -lock-timeout=5m -input=false \
+            -var="db_password=${{ secrets.PROD_DB_PASSWORD }}"
+
+      - name: No drift detected
+        if: steps.drift.outcome == 'success'
+        run: |
+          echo "No production drift detected."
+
+      - name: Drift or error detected
+        if: steps.drift.outcome == 'failure'
+        run: |
+          echo "Production drift detected or Terraform plan failed."
+          exit 1
