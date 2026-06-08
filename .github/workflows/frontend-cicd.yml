@@ -21,6 +21,7 @@ jobs:
   frontend-deploy:
     name: Deploy Frontend
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout repository
