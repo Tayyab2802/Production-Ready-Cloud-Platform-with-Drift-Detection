@@ -96,4 +96,7 @@ module "github_oidc" {
   github_org    = "Tayyab2802"
   github_repo   = "production-cloud-platform"
   github_branch = "dev"
+  github_allowed_subjects = [
+    "repo:Tayyab2802/production-cloud-platform:ref:refs/heads/dev"
+  ]
 }

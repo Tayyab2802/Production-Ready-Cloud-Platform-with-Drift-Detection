@@ -41,7 +41,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform fmt check
-        run: terraform fmt -check -recursive ../..
+        run: |
+          terraform fmt -check -recursive .
+          terraform fmt -check -recursive ../../modules
 
       - name: Terraform init
         run: terraform init -input=false
