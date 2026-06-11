@@ -1,4 +1,4 @@
-# Production Cloud Platform
+# Production Ready Cloud Platform with Drift Detection
 
 Production-style AWS cloud platform demonstrating Infrastructure as Code, automated CI/CD, environment promotion, containerised application deployment, security enforcement, monitoring, and operational governance.
 
